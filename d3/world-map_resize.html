@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="http://d3js.org/topojson.v0.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+<script>
+
+function show_circle(map, projection, lat, lon) {
+    // draws a circle to map
+	map.append("circle")
+           .attr("cx", function(d) {
+                   return projection([lon, lat])[0];
+           })
+           .attr("cy", function(d) {
+                   return projection([lon, lat])[1];
+           })
+           .attr("r", 0)
+           //.attr("class", "stations");
+           .style("fill", "red")
+           .style("opacity", 0);
+};
+
+function draw(ht) {
+    $("#mapContainer").html("<svg id='map' xmlns='http://www.w3.org/2000/svg' width='100%' height='" + ht + "px'></svg>");
+
+
+    // I discovered that the unscaled equirectangular map is 640x360. Thus, we
+    // should scale our map accordingly. Depending on the width ratio of the new
+    // container, the scale will be this ratio * 100. You could also use the height 
+    // instead. The aspect ratio of an equirectangular map is 2:1, so that's why
+    // our height is half of our width.
+	var svg = d3.select("svg") 
+
+    var map = d3.select("svg"); //select svg window
+    var width = $("svg").parent().width();
+    var height = ht;
+	
+	var g = svg.append("g");  // g will denote our appended svg
+
+    var projection = d3.geo.equirectangular()
+    	.scale((width/640)*100).translate([width/2, height/2])
+	    .center([0, 0 ])
+    	.rotate([0, 0]);
+    	
+    var path = d3.geo.path().projection(projection);
+    
+    
+    
+    d3.json('world-110m2.json', function(error, topology) {
+	
+
+
+
+
+   
+    	
+        map.selectAll('path').data(topojson.object(topology, topology.objects.countries)
+          .geometries).enter()
+            .append('path')
+            .attr('d', path)
+            .attr("width", width)
+            .attr("height", width/1.7);
+    });
+    
+/*
+var zoom = d3.behavior.zoom()
+    .on("zoom",function() {
+        g.attr("transform","translate("+ 
+            d3.event.translate.join(",")+")scale("+d3.event.scale+")");
+        g.selectAll("circle")
+            .attr("d", path.projection(projection));
+        g.selectAll("path")  
+            .attr("d", path.projection(projection)); 
+
+  });
+  
+
+svg.call(zoom)    
+  */  
+
+
+	show_circle(map, projection, 0, 0)
+    show_circle(map, projection, 0, 10) 
+
+
+	d3.selectAll("circle").transition()
+	.duration(3000)
+	.style("opacity", 1)
+         //.remove()
+    	//.delay(function(d, i) { return i * 10; })
+    .attr("r", 10 ); 
+        
+	d3.selectAll("circle").transition()
+	.duration(700)
+	.style("opacity", 0)
+         //.remove()
+    .delay(2000)
+    .attr("r", 0 ); 
+    
+
+}
+
+$(window).resize(function() {
+    if(this.resizeTO) clearTimeout(this.resizeTO);
+    this.resizeTO = setTimeout(function() {
+        $(this).trigger('resizeEnd');
+    }, 250);
+});
+
+$(window).bind('resizeEnd', function() {
+    var height = $("#mapContainer").width()/1.7;
+    $("#mapContainer svg").css("height", height);
+    draw(height);
+});
+
+$( document ).ready(function() {
+    draw($("#mapContainer").width()/1.7); //$("#mapContainer svg")
+});
+</script>
+
+<style>
+path {
+  stroke: white;
+  stroke-width: 0.15px;
+  fill: grey;
+}
+
+
+</style>
+</head>
+
+
+<body>
+	<div id="mapContainer" style="width: 100%;"></div>
+</body>
+
+</html>
